@@ -15,8 +15,8 @@ class ResourceGenerator
      * @var array
      */
     protected $formats = [
-        'form_field'  => "\$form->%s('%s', __('%s'))",
-        'show_field'  => "\$show->field('%s', __('%s'))",
+        'form_field' => "\$form->%s('%s', __('%s'))",
+        'show_field' => "\$show->field('%s', __('%s'))",
         'grid_column' => "\$grid->column('%s', __('%s'))",
     ];
 
@@ -35,14 +35,14 @@ class ResourceGenerator
      * @var array
      */
     protected $fieldTypeMapping = [
-        'ip'       => 'ip',
-        'email'    => 'email|mail',
+        'ip' => 'ip',
+        'email' => 'email|mail',
         'password' => 'password|pwd',
-        'url'      => 'url|link|src|href',
-        'mobile'   => 'mobile|phone',
-        'color'    => 'color|rgb',
-        'image'    => 'image|img|avatar|pic|picture|cover',
-        'file'     => 'file|attachment',
+        'url' => 'url|link|src|href',
+        'mobile' => 'mobile|phone',
+        'color' => 'color|rgb',
+        'image' => 'image|img|avatar|pic|picture|cover',
+        'file' => 'file|attachment',
     ];
 
     /**
@@ -83,12 +83,12 @@ class ResourceGenerator
         $output = '';
 
         foreach ($this->getTableColumns() as $column) {
-            $name = $column->getName();
+            $name = $column['name'];
             if (in_array($name, $reservedColumns)) {
                 continue;
             }
-            $type = $column->getType()->getName();
-            $default = $column->getDefault();
+            $type = $column['type_name'];
+            $default = $column['default'];
 
             $defaultValue = '';
 
@@ -166,7 +166,7 @@ class ResourceGenerator
         $output = '';
 
         foreach ($this->getTableColumns() as $column) {
-            $name = $column->getName();
+            $name = $column['name'];
 
             // set column label
             $label = $this->formatLabel($name);
@@ -182,9 +182,8 @@ class ResourceGenerator
     public function generateGrid()
     {
         $output = '';
-
         foreach ($this->getTableColumns() as $column) {
-            $name = $column->getName();
+            $name = $column['name'];
             $label = $this->formatLabel($name);
 
             $output .= sprintf($this->formats['grid_column'], $name, $label);
@@ -207,37 +206,37 @@ class ResourceGenerator
     /**
      * Get columns of a giving model.
      *
+     * @return \Doctrine\DBAL\Schema\Column[]
      * @throws \Exception
      *
-     * @return \Doctrine\DBAL\Schema\Column[]
      */
     protected function getTableColumns()
     {
-        if (!$this->model->getConnection()->isDoctrineAvailable()) {
-            throw new \Exception(
-                'You need to require doctrine/dbal: ~2.3 in your own composer.json to get database columns. '
-            );
-        }
-
-        $table = $this->model->getConnection()->getTablePrefix().$this->model->getTable();
-        /** @var \Doctrine\DBAL\Schema\MySqlSchemaManager $schema */
-        $schema = $this->model->getConnection()->getDoctrineSchemaManager($table);
-
-        // custom mapping the types that doctrine/dbal does not support
-        $databasePlatform = $schema->getDatabasePlatform();
-
-        foreach ($this->doctrineTypeMapping as $doctrineType => $dbTypes) {
-            foreach ($dbTypes as $dbType) {
-                $databasePlatform->registerDoctrineTypeMapping($dbType, $doctrineType);
-            }
-        }
-
+//        if (!$this->model->getConnection()->isDoctrineAvailable()) {
+//            throw new \Exception(
+//                'You need to require doctrine/dbal: ~2.3 in your own composer.json to get database columns. '
+//            );
+//        }
+//
+        $table = $this->model->getConnection()->getTablePrefix() . $this->model->getTable();
+//        /** @var \Doctrine\DBAL\Schema\MySqlSchemaManager $schema */
+//        $schema = $this->model->getConnection()->getDoctrineSchemaManager($table);
+//
+//        // custom mapping the types that doctrine/dbal does not support
+//        $databasePlatform = $schema->getDatabasePlatform();
+//
+//        foreach ($this->doctrineTypeMapping as $doctrineType => $dbTypes) {
+//            foreach ($dbTypes as $dbType) {
+//                $databasePlatform->registerDoctrineTypeMapping($dbType, $doctrineType);
+//            }
+//        }
+        $schema = $this->model->getConnection()->getSchemaBuilder();
         $database = null;
         if (strpos($table, '.')) {
             list($database, $table) = explode('.', $table);
         }
 
-        return $schema->listTableColumns($table, $database);
+        return $schema->getColumns($table);
     }
 
     /**
